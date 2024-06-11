@@ -14,7 +14,7 @@
     "lodash": "^4.17.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tldraw": "^2.1.4"
+    "tldraw": "^2.2.0-canary.a062d42bdf91"
   },
   "devDependencies": {
     "@types/react": "^18.3.2",

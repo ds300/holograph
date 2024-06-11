@@ -2,7 +2,7 @@ import "./index.css";
 import "./App.css";
 
 import { useCallback, useEffect, useState } from "react";
-import { Tldraw } from "tldraw";
+import { Tldraw, loadSnapshot } from "tldraw";
 import castInput from "./castInput";
 import deepDiff from "./deepDiff";
 import getUniqueName from "./getUniqueName";
@@ -198,6 +198,7 @@ export default function StoreEventsExample() {
   // Load tutorial to current page if its empty and its the first load
   useEffect(() => {
     if (!editor) return;
+    window.editor = editor;
     const allRecords = editor.store.allRecords();
     const canvasRecords = allRecords.filter(
       ({ id }) => id.startsWith("shape") || id.startsWith("asset")
@@ -208,8 +209,7 @@ export default function StoreEventsExample() {
           if (response.ok) return response.json();
         })
         .then((tutorial) => {
-          editor.createAssets(tutorial.assets);
-          editor.createShapes(tutorial.shapes);
+          loadSnapshot(editor.store, tutorial);
         });
       // .catch((error) => console.error(error));
     }
