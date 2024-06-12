@@ -63,7 +63,7 @@ export const reevaluateChild = (editor, id) => {
     if (inputShape.type !== "geo") continue;
     const inputValue =
       inputShape.props.geo === "ellipse"
-        ? inputShape.props.text
+        ? castInput(inputShape.props.text)
         : inputShape.meta.$value;
     const label = arrow.props.text || SET_VALUE;
     if (
@@ -73,9 +73,9 @@ export const reevaluateChild = (editor, id) => {
     ) {
       const propName = label.slice(1, -1);
       if (basePropsKeys.includes(propName)) {
-        basePropValues[propName] = castInput(inputValue);
+        basePropValues[propName] = inputValue;
       } else {
-        customPropValues[propName] = castInput(inputValue);
+        customPropValues[propName] = inputValue;
       }
     } else {
       newValues[label] = inputValue;
@@ -88,28 +88,30 @@ export const reevaluateChild = (editor, id) => {
   if (shape.props.geo === "ellipse") {
     if (newValues[SET_VALUE] !== undefined) {
       // update props and set text
-      nextShape.props.text = newValues[SET_VALUE];
+      nextShape.props.text = String(newValues[SET_VALUE]);
     }
+    editor.updateShape(nextShape);
   } else {
-    let functionBody = shape.props.text;
-    if (!functionBody.includes("return")) {
-      functionBody = `return ${functionBody}`;
-    }
-    const { result, error } = evaluateFunction(functionBody, newValues);
-    if (!error) {
-      // Remove quotes or double quotes if they exist
-      let resultString =
-        JSON.stringify(
-          typeof result === "number" ? result.toFixed(2) : result
-        ) ?? "";
-      if (resultString.startsWith('"') && resultString.endsWith('"')) {
-        resultString = resultString.slice(1, -1); // string
+    editor.once("tick", () => {
+      let functionBody = shape.props.text;
+      if (!functionBody.includes("return")) {
+        functionBody = `return ${functionBody}`;
       }
-      nextShape.meta.$value = resultString;
-    } else {
-      delete nextShape.meta.$value;
-    }
+      const { result, error } = evaluateFunction(functionBody, newValues);
+      if (!error) {
+        // Remove quotes or double quotes if they exist
+        let resultString =
+          JSON.stringify(
+            typeof result === "number" ? result.toFixed(2) : result
+          ) ?? "";
+        if (resultString.startsWith('"') && resultString.endsWith('"')) {
+          resultString = resultString.slice(1, -1); // string
+        }
+        nextShape.meta.$value = resultString;
+      } else {
+        delete nextShape.meta.$value;
+      }
+      editor.updateShape(nextShape);
+    });
   }
-  editor.updateShape(nextShape);
-  return;
 };

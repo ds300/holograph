@@ -10,7 +10,14 @@ export class CustomArrowBindingUtil extends ArrowBindingUtil {
     super(...args);
     this.editor.on("tick", () => {
       for (const id of this.evaluateOnTickNodes) {
-        reevaluateChild(this.editor, id);
+        for (const { fromId } of this.editor.getBindingsToShape(id, "arrow")) {
+          if (this.editor.getBindingsInvolvingShape(fromId).length > 1) {
+            // if there is at least one arrow going out of the shape and into another shape,
+            // then we can reevaluate the child.
+            reevaluateChild(this.editor, id);
+            return;
+          }
+        }
       }
     });
     const isDashedRectangle = (shape) =>
@@ -18,30 +25,39 @@ export class CustomArrowBindingUtil extends ArrowBindingUtil {
       shape.type === "geo" &&
       shape.props.geo === "rectangle" &&
       shape.props.dash === "dashed";
-    this.editor.store.listen((change) => {
-      // Added
-      for (const record of Object.values(change.changes.added)) {
-        if (record.typeName === "shape") {
-          if (isDashedRectangle(record)) {
-            this.evaluateOnTickNodes.add(record.id);
+    this.evaluateOnTickNodes = new Set(
+      this.editor.store
+        .allRecords()
+        .filter(isDashedRectangle)
+        .map((r) => r.id)
+    );
+    this.editor.store.listen(
+      (change) => {
+        // Added
+        for (const record of Object.values(change.changes.added)) {
+          if (record.typeName === "shape") {
+            if (isDashedRectangle(record)) {
+              this.evaluateOnTickNodes.add(record.id);
+            }
           }
         }
-      }
 
-      // Updated
-      for (const [from, to] of Object.values(change.changes.updated)) {
-        if (isDashedRectangle(to)) {
-          this.evaluateOnTickNodes.add(to.id);
-        } else if (isDashedRectangle(from)) {
-          this.evaluateOnTickNodes.delete(from.id);
+        // Updated
+        for (const [from, to] of Object.values(change.changes.updated)) {
+          if (isDashedRectangle(to)) {
+            this.evaluateOnTickNodes.add(to.id);
+          } else if (isDashedRectangle(from)) {
+            this.evaluateOnTickNodes.delete(from.id);
+          }
         }
-      }
 
-      // Removed
-      for (const record of Object.values(change.changes.removed)) {
-        this.evaluateOnTickNodes.delete(record.id);
-      }
-    });
+        // Removed
+        for (const record of Object.values(change.changes.removed)) {
+          this.evaluateOnTickNodes.delete(record.id);
+        }
+      },
+      { source: "all" }
+    );
   }
   onAfterCreate({ binding }) {
     super.onAfterCreate?.({ binding });
@@ -50,7 +66,12 @@ export class CustomArrowBindingUtil extends ArrowBindingUtil {
       const toShape = this.editor.getShape(binding.toId);
       if (toShape.type === "geo" && toShape.props.geo === "rectangle") {
         const arrow = this.editor.getShape(binding.fromId);
-        if (!arrow.props.text) {
+        const startBinding = this.editor
+          .getBindingsFromShape(arrow, "arrow")
+          .find((b) => b.props.terminal === "start");
+        if (startBinding?.toId === binding.toId) {
+          // if the arrow starts and ends on the same shape, don't add a variable name
+        } else if (!arrow.props.text) {
           const allLabels = this.editor
             .getBindingsInvolvingShape(toShape, "arrow")
             .filter((ab) => ab.props.terminal === "end")
