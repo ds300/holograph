@@ -11,6 +11,10 @@ import {
   defaultTools,
   loadSnapshot,
   ContextMenu,
+  ErrorScreen,
+  LoadingScreen,
+  usePreloadAssets,
+  defaultEditorAssetUrls,
 } from "tldraw";
 import CustomHelpMenu from "./CustomHelpMenu";
 import CustomMainMenu from "./CustomMainMenu";
@@ -64,14 +68,27 @@ export default function StoreEventsExample() {
     []
   );
 
+  const bindingUtils = useMemo(() => [CustomArrowBindingUtil], []);
+  const tools = useMemo(() => [...defaultTools, ...defaultShapeTools], []);
+
+  const assetLoading = usePreloadAssets(defaultEditorAssetUrls);
+
+  if (assetLoading.error) {
+    return <ErrorScreen>Could not load assets.</ErrorScreen>;
+  }
+
+  if (!assetLoading.done) {
+    return <LoadingScreen>Loading assets...</LoadingScreen>;
+  }
+
   return (
     <div style={{ display: "flex", width: "100%" }}>
       <TldrawEditor
         onMount={setAppToState}
         initialState="select"
         shapeUtils={defaultShapeUtils}
-        bindingUtils={useMemo(() => [CustomArrowBindingUtil], [])}
-        tools={useMemo(() => [...defaultTools, ...defaultShapeTools], [])}
+        bindingUtils={bindingUtils}
+        tools={tools}
         components={components}
         persistenceKey="holograph-1"
       >
