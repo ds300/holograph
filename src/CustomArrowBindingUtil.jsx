@@ -76,7 +76,6 @@ export class CustomArrowBindingUtil extends ArrowBindingUtil {
   }
   // the bound shape changed
   onAfterChangeToShape({ shapeBefore, shapeAfter, binding }) {
-    console.log("onAfterChangeToShape", binding.id);
     super.onAfterChangeToShape?.({ shapeBefore, shapeAfter, binding });
     if (binding.props.terminal !== "start") return;
     if (shapeAfter.type !== "geo") return;

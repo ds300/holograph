@@ -38,7 +38,6 @@ function evaluateFunction(functionBody, args) {
  * @returns
  */
 export const reevaluateChild = (editor, id) => {
-  console.log("reevaluateChild", id);
   const shape = editor.getShape(id);
   if (
     !shape ||

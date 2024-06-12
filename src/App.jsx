@@ -15,6 +15,10 @@ import {
   LoadingScreen,
   usePreloadAssets,
   defaultEditorAssetUrls,
+  TldrawScribble,
+  TldrawSelectionForeground,
+  TldrawSelectionBackground,
+  TldrawHandles,
 } from "tldraw";
 import CustomHelpMenu from "./CustomHelpMenu";
 import CustomMainMenu from "./CustomMainMenu";
@@ -64,6 +68,11 @@ export default function StoreEventsExample() {
       HelpMenu: CustomHelpMenu,
       MainMenu: (...props) => <CustomMainMenu {...props} editor={editor} />,
       SharePanel,
+      Scribble: TldrawScribble,
+      CollaboratorScribble: TldrawScribble,
+      SelectionForeground: TldrawSelectionForeground,
+      SelectionBackground: TldrawSelectionBackground,
+      Handles: TldrawHandles,
     }),
     []
   );
