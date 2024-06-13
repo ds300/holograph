@@ -102,7 +102,7 @@ export const reevaluateChild = (editor, id) => {
         // Remove quotes or double quotes if they exist
         let resultString =
           JSON.stringify(
-            typeof result === "number" ? result.toFixed(2) : result
+            typeof result === "number" ? parseFloat(result.toFixed(2)) : result
           ) ?? "";
         if (resultString.startsWith('"') && resultString.endsWith('"')) {
           resultString = resultString.slice(1, -1); // string
